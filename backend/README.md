@@ -663,18 +663,18 @@ py.test test_01_ping.tavern.yml
 docker pull lodthe/prod-backend-antifraud:latest
 
 # Запустить контейнер:
-docker run -e SERVER_PORT=9090 -e CACHE_DURATION_MS=5000 -p 9090:9090 lodthe/prod-backend-antifraud:latest
+docker run -e SERVER_PORT=5195 -e CACHE_DURATION_MS=5000 -p 5195:5195 lodthe/prod-backend-antifraud:latest
 ```
 
 
-- `-e SERVER_PORT=9090` определяет порт, на котором будет запущено приложение внутри контейнера
+- `-e SERVER_PORT=5195` определяет порт, на котором будет запущено приложение внутри контейнера
 - `-e CACHE_DURATION_MS=5000` конфигурирует длительность, на которую клиенты сервиса должны кешировать ответ (в миллисекундах)
-- `-p 9090:9090` пробрасывает порт из контейнера наружу, чтобы сервис был доступен с вашей хоста (операционной системы)
+- `-p 5195:5195` пробрасывает порт из контейнера наружу, чтобы сервис был доступен с вашей хоста (операционной системы)
 - Если у вас ноутбук на Arm (MacBook M-версии), добавьте флаг `--platform linux/amd64`
 
 После запуска к контейнеру можно обращаться по HTTP:
 ```
-[$] curl 0:9090/api/validate -v -H 'Content-Type: application/json' -d '{"user_email": "user@example.co", "promo_id": "PROMO145"}'
+[$] curl 0:5195/api/validate -v -H 'Content-Type: application/json' -d '{"user_email": "user@example.co", "promo_id": "PROMO145"}'
 
 > {"ok":true,"cache_until":"2025-01-16T14:11:55.425"}
 ```
@@ -682,7 +682,7 @@ docker run -e SERVER_PORT=9090 -e CACHE_DURATION_MS=5000 -p 9090:9090 lodthe/pro
 По умолчанию антифрод-сервис отдаёт успешные ответы на все запросы.
 С помощью системного эндпоинта можно обновить значение `ok`, которое сервис будет выдавать для запросов по указанному e-mail'у.
 ```
-[$] curl localhost:9090/internal/update_user_verdict -v -H 'Content-Type: application/json' -d '{"user_email": "user@example.com", "ok": false}'
+[$] curl localhost:5195/internal/update_user_verdict -v -H 'Content-Type: application/json' -d '{"user_email": "user@example.com", "ok": false}'
 ```
 
 ## Лог изменений
