@@ -1022,7 +1022,7 @@ components:
         age:
           type: integer
           minimum: 0
-          maxLength: 100
+          maximum: 100
           description: Возраст пользователя
           example: 13
 
