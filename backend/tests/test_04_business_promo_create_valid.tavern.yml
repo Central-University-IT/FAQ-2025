@@ -11,7 +11,7 @@ stages:
         email: raspberryprod@mail.com
         password: SuperStrongPassword2000!
     response:
-      status_code: 201
+      status_code: 200
 
   - name: "Аутентификация [1]"
     id: 04_auth1
@@ -37,7 +37,7 @@ stages:
         email: cherryprod@mail.com
         password: HARDpassword@10101010!
     response:
-      status_code: 201
+      status_code: 200
 
   - name: "Аутентификация [2]"
     id: 04_auth2

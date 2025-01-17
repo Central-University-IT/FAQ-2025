@@ -262,7 +262,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/UserRegister"
       responses:
         "200":
           description: Пользователь успешно зарегистрирован.
@@ -787,7 +787,7 @@ components:
       properties:
         age_from:
           type: integer
-          description: Минимальный возраст целевой аудитории (включительно).
+          description: Минимальный возраст целевой аудитории (включительно). Не должен превышать age_until.
           minimum: 0
           maximum: 100
           example: 14
@@ -1075,6 +1075,18 @@ components:
         - surname
         - email
         - other
+        
+    UserRegister:
+      type: object
+      properties:
+        password:
+          $ref: "#/components/schemas/Password"
+      
+      allOf:
+        - $ref: "#/components/schemas/User"
+      
+      required:
+        - password
 
     UserPatch:
       type: object

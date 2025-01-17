@@ -10,7 +10,7 @@ stages:
         email: raspberryprod@mail.com
         password: SuperStrongPassword2000!
     response:
-      status_code: 201
+      status_code: 200
 
   - name: "Повторная регистрация на тот же email"
     request:
