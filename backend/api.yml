@@ -94,14 +94,14 @@ paths:
       summary: Создание нового промокода
       description: |
         Создает новый промокод для компании с настройкой таргетинга и типа промокодов.
-      parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/PromoCreate"
+      security:
+        - APIKeyHeader: []
       responses:
         "201":
           description: Промокод успешно создан.
@@ -126,7 +126,6 @@ paths:
       description: |
         Возвращает список промокодов компании с возможностью фильтрации, сортировки и пагинации.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/LimitQueryParam"
         - $ref: "#/components/parameters/OffsetQueryParam"
         - name: sort_by
@@ -147,6 +146,8 @@ paths:
               Список стран целевой аудитории в формате ISO 3166-1 alpha-2, по которому нужно фильтровать промокоды. В ответе должны содержаться промокоды либо без указанного региона, либо с регионом, который присутствует среди указанного списка при фильтрации.
               Если параметр не указан, подходят промокоды с произвольными регионом.
             example: ["ru", "fr"]
+      security:
+        - APIKeyHeader: []
       responses:
         "200":
           description:
@@ -174,7 +175,6 @@ paths:
       description: |
         Получает данные промокода по его ID. С помощью этого эндпоинта компания может получить только свои промокоды.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
@@ -191,6 +191,8 @@ paths:
           $ref: "#/components/responses/NoAccessToPromo"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
     patch:
       tags:
@@ -199,7 +201,6 @@ paths:
       description: |
         Редактирует данные промокода по его ID.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
@@ -222,6 +223,8 @@ paths:
           $ref: "#/components/responses/NoAccessToPromo"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
   /business/promo/{id}/stat:
     get:
@@ -231,7 +234,6 @@ paths:
       description: |
         Возвращает статистику использования промокода по его ID.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
@@ -248,6 +250,8 @@ paths:
           $ref: "#/components/responses/NoAccessToPromo"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
   # B2C API
   /user/auth/sign-up:
@@ -303,8 +307,6 @@ paths:
       summary: Получение профиля пользователя
       description: |
         Возвращает данные профиля текущего пользователя.
-      parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
       responses:
         "200":
           description: Данные профиля пользователя.
@@ -314,6 +316,8 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/NoAuth401"
+      security:
+        - APIKeyHeader: []
 
     patch:
       tags:
@@ -321,8 +325,6 @@ paths:
       summary: Изменение настроек пользователя
       description: |
         Обновляет настройки текущего пользователя. Если указан новый пароль, следующие попытки аутентификации должны учитывать обновленное значение.
-      parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
       requestBody:
         required: true
         content:
@@ -340,6 +342,8 @@ paths:
           $ref: "#/components/responses/Response400"
         "401":
           $ref: "#/components/responses/NoAuth401"
+      security:
+        - APIKeyHeader: []
 
   /user/feed:
     get:
@@ -351,7 +355,6 @@ paths:
         Промокоды отсортированы по убыванию даты создания.
 
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/LimitQueryParam"
         - $ref: "#/components/parameters/OffsetQueryParam"
         - name: category
@@ -382,6 +385,8 @@ paths:
           $ref: "#/components/responses/Response400"
         "401":
           $ref: "#/components/responses/NoAuth401"
+      security:
+        - APIKeyHeader: []
 
   /user/promo/{id}:
     get:
@@ -391,7 +396,6 @@ paths:
       description: |
         Возвращает промокод с этим id
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
@@ -406,6 +410,8 @@ paths:
           $ref: "#/components/responses/NoAuth401"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
   /user/promo/{id}/like:
     post:
@@ -415,7 +421,6 @@ paths:
       description: |
         Добавляет лайк к указанному промокоду. Повторный лайк не изменяет состояния, возвращается успешный ответ.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
@@ -434,6 +439,8 @@ paths:
           $ref: "#/components/responses/NoAuth401"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
     delete:
       tags:
@@ -442,7 +449,6 @@ paths:
       description: |
         Удаляет лайк с указанного промокода. Если лайк не стоит, возвращается успешный ответ.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
@@ -461,6 +467,9 @@ paths:
           $ref: "#/components/responses/NoAuth401"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      
+      security:
+        - APIKeyHeader: []
 
   /user/promo/{id}/comments:
     post:
@@ -470,7 +479,6 @@ paths:
       description: |
         Добавляет комментарий к указанному промокоду.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
@@ -496,6 +504,8 @@ paths:
           $ref: "#/components/responses/NoAuth401"
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
     get:
       tags:
@@ -504,7 +514,6 @@ paths:
       description: |
         Возвращает список комментариев к указанному промокоду. Комментарии отсортированы по убыванию даты публикации.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/LimitQueryParam"
         - $ref: "#/components/parameters/OffsetQueryParam"
         - $ref: "#/components/parameters/Id"
@@ -528,6 +537,9 @@ paths:
         "404":
           $ref: "#/components/responses/PromoNotFound"
 
+      security:
+        - APIKeyHeader: []
+
   /user/promo/{id}/comments/{comment_id}:
     get:
       tags:
@@ -536,7 +548,6 @@ paths:
       description: |
         Возвращает комментарий с данным ID.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/CommentId"
       responses:
@@ -553,6 +564,9 @@ paths:
         "404":
           $ref: "#/components/responses/PromoOrCommentNotFound"
 
+      security:
+        - APIKeyHeader: []
+
     put:
       tags:
         - B2C
@@ -560,7 +574,6 @@ paths:
       description: |
         Редактировать текст комментария с данным айди.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/CommentId"
       requestBody:
@@ -589,6 +602,8 @@ paths:
           $ref: "#/components/responses/NoAccessToPromoUser"
         "404":
           $ref: "#/components/responses/PromoOrCommentNotFound"
+      security:
+        - APIKeyHeader: []
 
     delete:
       tags:
@@ -597,7 +612,6 @@ paths:
       description: |
         Удалить комментарий с данным ID.
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/CommentId"
       responses:
@@ -619,6 +633,8 @@ paths:
           $ref: "#/components/responses/NoAccessToPromoUser"
         "404":
           $ref: "#/components/responses/PromoOrCommentNotFound"
+      security:
+        - APIKeyHeader: []
 
   /user/promo/{id}/activate:
     post:
@@ -629,7 +645,6 @@ paths:
         Активация промокода по его ID.
       parameters:
         - $ref: "#/components/parameters/Id"
-        - $ref: "#/components/parameters/AuthorizationHeader"
       responses:
         "200":
           description: Промокод успешно активирован.
@@ -661,6 +676,8 @@ paths:
                     description: Возвращается в случае, если антифрод сервис не разрешил данному пользователю получить новый промокод.
         "404":
           $ref: "#/components/responses/PromoNotFound"
+      security:
+        - APIKeyHeader: []
 
   /user/promo/history:
     get:
@@ -670,7 +687,6 @@ paths:
       description: |
         Возвращает историю использования промокодов ЭТИМ ПОЛЬЗОВАТЕЛЕМ с поддержкой пагинации. Промокоды отсортированы по убыванию даты активации. 
       parameters:
-        - $ref: "#/components/parameters/AuthorizationHeader"
         - $ref: "#/components/parameters/LimitQueryParam"
         - $ref: "#/components/parameters/OffsetQueryParam"
       responses:
@@ -689,6 +705,8 @@ paths:
           $ref: "#/components/responses/Response400"
         "401":
           $ref: "#/components/responses/NoAuth401"
+      security:
+        - APIKeyHeader: []
 
 components:
   requestBodies:
@@ -713,16 +731,6 @@ components:
       schema:
         $ref: "#/components/schemas/CommentId"
 
-    AuthorizationHeader:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        minLength: 5
-        maxLength: 300
-      description: Токен доступа - "Bearer {token}".
-      example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlByb2QgUHJvZG92aWNoIiwiaWF0IjoxNTE2MjM5MDIyfQ.zqNHgTZOlgb0n5KDT2kPET4dOKnkrxJP5Kz6LhIGRiY"
     LimitQueryParam:
       name: limit
       in: query
@@ -1290,3 +1298,11 @@ components:
               message:
                 type: string
                 example: "Такого промокода или комментария не существует."
+
+  securitySchemes:
+    APIKeyHeader:
+      in: "header"
+      description: Токен доступа - "Bearer {token}"
+      example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlByb2QgUHJvZG92aWNoIiwiaWF0IjoxNTE2MjM5MDIyfQ.zqNHgTZOlgb0n5KDT2kPET4dOKnkrxJP5Kz6LhIGRiY"
+      type: "apiKey"
+      name: "Authorization"
