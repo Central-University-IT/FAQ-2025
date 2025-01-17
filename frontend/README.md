@@ -41,5 +41,5 @@ npx playwright install
 
 ```
 docker build -t prod-task-2-tests .
-docker run -it --rm -v $(pwd)/test-results:/test-results prod-task-2-tests
+docker run -it --rm -v "$(pwd)/test-results:/test-results" prod-task-2-tests
 ```
