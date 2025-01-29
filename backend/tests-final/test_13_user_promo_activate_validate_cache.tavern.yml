@@ -118,6 +118,10 @@ stages:
     response:
       status_code: 200
 
+  # При локальном запуске антифрода необходимо установить env:
+  # SLOWDOWN_AFTER=slowdown@antifraud.ru
+  # BLOCKED_EMAILS=blocked@antifraud.com
+  #
   # - name: "Внутренний запрос в Antifraud: установить искусственную задержку 2500-3000 мс, приложение должно кешировать предыдущий ответ"
   #   request:
   #     url: "{ANTIFRAUD_URL}/set_delay"

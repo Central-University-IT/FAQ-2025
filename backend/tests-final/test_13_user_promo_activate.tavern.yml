@@ -179,6 +179,10 @@ stages:
       json:
         promo: "sale-10"
 
+  # При локальном запуске антифрода необходимо установить env:
+  # SLOWDOWN_AFTER=slowdown@antifraud.ru
+  # BLOCKED_EMAILS=blocked@antifraud.com
+  #
   # - name: "Внутренний запрос в Antifraud: заблокировать пользователя 2 (переменная ANTIFRAUD_URL, см. config.yml)"
   #   max_retries: 3
   #   request:

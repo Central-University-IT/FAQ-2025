@@ -11,6 +11,13 @@
 К апелляции не принимаются: просьбы пересмотреть разбалловку, перенос теста из одной группы в другую, обсуждение формата `url` и `email`.
 
 Для локального тестирования необходимо обновить образ антифрода: `docker pull lodthe/prod-backend-antifraud:latest`.
+Для корректного завершения 13 и 14 группы тестов при запуске контейнера антифрода необходимо передать следующие переменные окружения:
+```
+SLOWDOWN_AFTER=slowdown@antifraud.ru
+BLOCKED_EMAILS=blocked@antifraud.com
+
+docker run -e SERVER_PORT=9090 -e SLOWDOWN_AFTER=slowdown@antifraud.ru -e BLOCKED_EMAILS=blocked@antifraud.com -p 9090:9090 lodthe/prod-backend-antifraud:latest
+```
 
 ---
 
