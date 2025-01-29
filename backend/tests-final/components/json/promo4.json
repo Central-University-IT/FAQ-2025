@@ -1,0 +1,15 @@
+{
+    "description": "Дарим глобус при оформлении заказа на 30000!",
+    "target": {
+        "age_from": 28,
+        "age_until": 50,
+        "country": "us"
+    },
+    "max_count": 1,
+    "active_until": "2025-01-10",
+    "mode": "UNIQUE",
+    "promo_unique": [
+        "only_youuuu",
+        "not_only_you"
+    ]
+}

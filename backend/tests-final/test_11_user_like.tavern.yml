@@ -1,0 +1,260 @@
+test_name: Получение промокода по ID со стороны пользователя
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_reg1
+
+  - type: ref
+    id: basic_auth_reg2
+
+  - name: "Регистрация нового пользователя [1]: gb, 60"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Steve
+        surname: Wozniak
+        email: creator1@apple.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 60
+          country: gb
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Регистрация нового пользователя [2]: us, 15"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Mike
+        surname: Bloomberg
+        email: mike@bloomberg.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 15
+          country: us
+    response:
+      status_code: 200
+      save:
+        json:
+          user2_token: token
+
+  - name: "Регистрация нового пользователя [3]: ru, 40"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Yefim
+        surname: Dinitz
+        email: algo@prog.ru
+        password: HardPASSword1!
+        other:
+          age: 40
+          country: ru
+    response:
+      status_code: 200
+      save:
+        json:
+          user3_token: token
+  
+  - name: "Создание промокода [1]: active, <all>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[1] Активный COMMON промокод для всех"
+        target: {}
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo1_id: id
+
+  - name: "Получение промокода [1] со стороны пользователя 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        like_count: 0
+        is_liked_by_user: false
+
+  - name: "Получение промокода [1] со стороны компании"
+    request:
+      url: "{BASE_URL}/business/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        like_count: 0
+
+  - name: "Лайк промокода [1] пользователем 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/like"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Повторный лайк промокода [1] пользователем 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/like"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Получение промокода [1] со стороны пользователя 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        like_count: 1
+        is_liked_by_user: true
+
+  - name: "Получение промокода [1] со стороны пользователя 2"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user2_token}"
+    response:
+      status_code: 200
+      json:
+        like_count: 1
+        is_liked_by_user: false
+
+  - name: "Лайк промокода [1] пользователем 2"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/like"
+      method: POST
+      headers:
+        Authorization: "Bearer {user2_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Получение промокода [1] со стороны пользователя 2"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user2_token}"
+    response:
+      status_code: 200
+      json:
+        like_count: 2
+        is_liked_by_user: true
+
+  - name: "Удаление несуществующего лайка промокода [1] пользователем 3"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/like"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Получение промокода [1] со стороны пользователя 3"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        like_count: 2
+        is_liked_by_user: false
+
+  - name: "Получение промокода [1] со стороны компании"
+    request:
+      url: "{BASE_URL}/business/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        like_count: 2
+
+  - name: "Удаление лайка промокода [1] пользователем 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/like"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Получение промокода [1] со стороны пользователя 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        like_count: 1
+        is_liked_by_user: false
+
+  - name: "Повторное удаление лайка промокода [1] пользователем 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/like"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Получение промокода [1] со стороны пользователя 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        like_count: 1
+        is_liked_by_user: false

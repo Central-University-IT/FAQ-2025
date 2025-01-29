@@ -1,0 +1,380 @@
+test_name: Создание промокода с ошибкой
+
+stages:
+  - name: "Регистрация компании"
+    request:
+      url: "{BASE_URL}/business/auth/sign-up"
+      method: POST
+      json:
+        name: "Кто-то"
+        email: pochta@mail.com
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 200
+      save:
+        json:
+          company100_token_old: token
+
+  - name: "Аутентификация"
+    request:
+      url: "{BASE_URL}/business/auth/sign-in"
+      method: POST
+      json:
+        email: pochta@mail.com
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 200
+      save:
+        json:
+          company100_token: token
+
+  - name: "Попытка создать промокод со старым токеном"
+    id: 04_create1
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token_old}"
+      json: !include components/json/promo1.json
+    response:
+      status_code: 401
+
+  - name: "Создание некорректного промокода (пропущено описание)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        target: {}
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (пропущен таргет)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100
+        active_from: "2028-12-20"
+        mode: "COMMON"
+        promo_common: "sale-40"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректный mode)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Подарочная маска для сна при оформлении кредита на машину"
+        target:
+          age_from: 28
+          age_until: 50
+          country: ru
+        max_count: 1
+        active_from: "2025-01-01"
+        active_until: "2028-12-30"
+        mode: "EMINEM"
+        promo_unique:
+          - uniq1
+          - uniq2
+          - uniq3
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректный max_count)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Подарочная маска для сна при оформлении кредита на машину"
+        target:
+          age_from: 28
+          age_until: 50
+          country: ru
+        max_count: 3
+        active_from: "2025-01-01"
+        active_until: "2028-12-30"
+        mode: "UNIQUE"
+        promo_unique:
+          - uniq1
+          - uniq2
+          - uniq3
+    response:
+      status_code: 400
+  
+  - name: "Создание некорректного промокода (некорректная страна и маленькое описание)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "small"
+        target:
+          age_from: 28
+          age_until: 50
+          country: Vietnam
+        max_count: 1
+        active_until: "2025-01-10"
+        mode: "UNIQUE"
+        promo_unique:
+          - only_youuuu
+          - not_only_you
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (несуществующая страна)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100
+        target:
+          country: aa
+        active_from: "2028-12-20"
+        mode: "COMMON"
+        promo_common: "sale-40"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (age_from > age_until)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100
+        target:
+          age_from: 50
+          age_until: 49
+        active_from: "2028-12-20"
+        mode: "COMMON"
+        promo_common: "sale-40"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (пропущенное promo_common)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100
+        target: {}
+        active_from: "2028-12-20"
+        mode: "COMMON"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (common и promo_unique)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100
+        target: {}
+        active_from: "2028-12-20"
+        mode: "COMMON"
+        promo_unique: 
+          - "sale-40"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (unique и promo_common)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 1
+        target: {}
+        active_from: "2028-12-20"
+        mode: "UNIQUE"
+        promo_common: "sale-40"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (promo_common и promo_unique)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 1
+        target: {}
+        active_from: "2028-12-20"
+        mode: "UNIQUE"
+        promo_common: "sale-40"
+        promo_unique:
+          - "opa"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (слишком короткое promo_common)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100
+        target: {}
+        active_from: "2028-12-20"
+        mode: "COMMON"
+        promo_common: "str"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректный тип promo_unique)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 1
+        target: {}
+        active_from: "2028-12-20"
+        mode: "UNIQUE"
+        promo_unique: 123
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректный тип max_count)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: "fifty"
+        target: {}
+        active_from: "2028-12-20"
+        mode: "COMMON"
+        promo_common: "sale-40"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректный тип target)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 1
+        target: 123
+        active_from: "2028-12-20"
+        mode: "UNIQUE"
+        promo_unique:
+          - "opa"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (отрицательный max_count)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: -1
+        target: {}
+        mode: "COMMON"
+        promo_common: "something-here"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (слишком большой max_count)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 100000001
+        target: {}
+        mode: "COMMON"
+        promo_common: "something-here"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (огромный max_count)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        max_count: 1000000000001
+        target: {}
+        mode: "COMMON"
+        promo_common: "something-here"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректная ссылка)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        image_url: itsnotalink
+        max_count: 1000
+        target: {}
+        mode: "COMMON"
+        promo_common: "something-here"
+    response:
+      status_code: 400
+
+  - name: "Создание некорректного промокода (некорректная ссылка)"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company100_token}"
+      json:
+        description: "Повышенный кэшбек 40% для новых клиентов банка!"
+        image_url: "privet@com"
+        max_count: 1000
+        target: {}
+        mode: "COMMON"
+        promo_common: "something-here"
+    response:
+      status_code: 400

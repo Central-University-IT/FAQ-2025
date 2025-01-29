@@ -1,0 +1,17 @@
+{
+    "description": "Повышенный кэшбек 10000% для новых клиентов банка!",
+    "target": {
+        "country": "kz",
+        "age_from": 20,
+        "age_until": 100,
+        "categories": [
+            "tbankvpered",
+            "KOTEkote",
+            "dogseverywhere"
+        ]
+    },
+    "active_until": "2040-01-02",
+    "max_count": 10,
+    "mode": "COMMON",
+    "promo_common": "sale-1000"
+}

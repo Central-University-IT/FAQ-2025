@@ -1,0 +1,301 @@
+# image_solution: ${IMAGE_SOLUTION}
+image_postgres: postgres:16.6-alpine3.21 # ${IMAGE_POSTGRES}
+image_redis: redis:7.4-alpine3.21 # ${IMAGE_REDIS}
+image_antifraud: lodthe/prod-backend-antifraud:go
+timeout: 20m
+default_testcase_timeout: 2m
+default_antifraud_config:
+  cache_lifetime: 5s
+tests_dir_path: tests
+testcases:
+  - name: "01/ping"
+    enabled: true
+    steps:
+      - name: Проверка пинга
+        score: 1
+        type: tavern
+        tavern:
+          filepath: test_01_ping.tavern.yml
+  - name: "02/business/auth/sign-up"
+    enabled: true
+    steps:
+      - name: Успешная регистрация
+        score: 1
+        type: tavern
+        tavern:
+          filepath: test_02_business_signup.tavern.yml
+      - name: Валидация регистрации с некорректным паролем
+        score: 2
+        type: tavern
+        tavern:
+          filepath: test_02_business_signup_invalid_password.tavern.yml
+  - name: "03/business/auth/sign-in"
+    enabled: true
+    steps:
+      - name: Успешная аутентификация 
+        score: 4
+        type: tavern
+        tavern:
+          filepath: test_03_business_signin.tavern.yml
+  - name: "04/business/promo/create"
+    enabled: true
+    steps:
+      - name: Успешное создание промокода
+        score: 1
+        type: tavern
+        tavern:
+          filepath: test_04_business_promo_create_valid.tavern.yml
+      - name: Успешное создание промокода [усложненная версия]
+        continue_if_failed: true
+        score: 2
+        type: tavern
+        tavern:
+          filepath: test_04_business_promo_create_valid_tricky.tavern.yml
+      - name: Перезагрузка приложения
+        type: reload
+      - name: Создание промокода с некорректной структурой запроса
+        score: 1
+        type: tavern
+        tavern:
+          filepath: test_04_business_promo_create_invalid.tavern.yml
+      - name: Нагрузочное тестирование
+        score: 2
+        type: loadtest
+        loadtest:
+          auth_request:
+            method: POST
+            url: "/business/auth/sign-up"
+            body:
+              name: "Нагрузочный тест"
+              email: "loadtest@gmail.com"
+              password: "HardPassw0rd!!!"
+          request:
+            method: POST
+            url: /business/promo
+            status_code: 201
+            body:
+              description: "Повышенный кэшбек 10% для новых клиентов банка!"
+              target: {}
+              max_count: 10
+              active_from: "2025-01-10"
+              mode: "COMMON"
+              promo_common: "sale-10"
+          requests_number: 150       # В рамках нагрузочного теста будет отправлено {requests_number} запросов. 
+          concurrency: 10            # Тестирующая система будет отправлять {concurrency} параллельных запросов
+          total_timeout: 15s         # Суммарное время на обработку всех запросов ограничено {total_timeout}
+          percentile: 0.8            # Для валидации скорости ответа сервера будет взят {percentile} перцентиль (0.8 = 80%)
+          percentile_timeout: 250ms  # {percentile} времени ответа на запрос должен не превышать {percentile_timeout}
+  - name: "05/business/promo/list"
+    enabled: true
+    steps:
+      - name: Успешное создание промокодов
+        type: tavern
+        tavern:
+          filepath: test_04_business_promo_create_valid.tavern.yml
+      - name: Перезагрузка приложения
+        type: reload
+      - name: Получение списка промокодов
+        score: 3
+        type: tavern
+        tavern:
+          filepath: test_05_business_promo_list.tavern.yml
+      - name: Некорректные параметры при получении списка промокодов
+        continue_if_failed: true
+        score: 2
+        type: tavern
+        tavern:
+          filepath: test_05_business_promo_list_invalid.tavern.yml
+      - name: Нагрузочное тестирование (получение пустого списка)
+        score: 3
+        type: loadtest
+        loadtest:
+          auth_request:
+            method: POST
+            url: "/business/auth/sign-up"
+            body:
+              name: "Нагрузочный тест"
+              email: "loadtest@gmail.com"
+              password: "HardPassw0rd!!!"
+          request:
+            method: GET
+            url: /business/promo
+            status_code: 200
+          requests_number: 100
+          concurrency: 10
+          total_timeout: 10s
+          percentile: 0.8
+          percentile_timeout: 250ms
+  - name: "06/business/promo/{id}"
+    enabled: true
+    steps:
+      - name: Корректное редактирование и получение промокода по ID
+        score: 4
+        continue_if_failed: true
+        type: tavern
+        tavern:
+          filepath: test_06_business_promo_id_valid.tavern.yml
+      - name: Редактирование промокода с некорректными параметрами и логикой
+        score: 5
+        type: tavern
+        tavern:
+          filepath: test_06_business_promo_id_invalid.tavern.yml
+  - name: "07/user/auth/sign-up"
+    enabled: true
+    steps:
+      - name: Корректная регистрация пользователя
+        score: 1
+        type: tavern
+        tavern:
+          filepath: test_07_user_signup.tavern.yml
+      - name: Некорректный запрос на регистрацию пользователя
+        score: 2
+        type: tavern
+        tavern:
+          filepath: test_07_user_signup_invalid.tavern.yml
+  - name: "08/user/auth/sign-in"
+    enabled: true
+    steps:
+      - name: Корректная аутентификация пользователя
+        score: 1
+        type: tavern
+        tavern:
+          filepath: test_08_user_signin.tavern.yml
+      - name: Нагрузочное тестирование (попытка входа)
+        score: 2
+        type: loadtest
+        loadtest:
+          request:
+            method: POST
+            url: "/user/auth/sign-in"
+            body: # Регистрация происходит в тесте
+              email: minecraft.digger@edu.hse.ru
+              password: SuperStrongPassword2000!
+          requests_number: 100
+          concurrency: 10
+          total_timeout: 10s
+          percentile: 0.8
+          percentile_timeout: 200ms
+  - name: "09/user/profile"
+    enabled: true
+    steps:
+      - name: Получение и редактирование профиля
+        score: 2
+        continue_if_failed: true
+        type: tavern
+        tavern:
+          filepath: test_09_user_profile.tavern.yml
+      - name: Некорректный запрос на редактирование профиля
+        score: 2
+        type: tavern
+        tavern:
+          filepath: test_09_user_profile_invalid.tavern.yml
+      - name: Нагрузочное тестирование (получение профиля)
+        score: 2
+        type: loadtest
+        loadtest:
+          auth_request:
+            method: POST
+            url: "/user/auth/sign-up"
+            body:
+              name: Steve
+              surname: Ballmer
+              email: creator@microsoft.com
+              password: WhoLiveSInRedmond1969!
+              other:
+                age: 56
+                country: us
+          request:
+            method: GET
+            url: "/user/profile"
+          requests_number: 100
+          concurrency: 10
+          total_timeout: 10s
+          percentile: 0.8
+          percentile_timeout: 250ms
+  - name: "10/user/feed"
+    enabled: true
+    steps:
+      - name: Получение ленты промокодов
+        score: 6
+        type: tavern
+        tavern:
+          filepath: test_10_user_feed.tavern.yml
+      - name: Перезагрузка приложения
+        type: reload
+      - name: Получение промокода по ID
+        score: 4
+        type: tavern
+        tavern:
+          filepath: test_10_user_promo.tavern.yml
+      - name: Нагрузочное тестирование (получение ленты промокодов)
+        score: 4
+        type: loadtest
+        loadtest:
+          auth_request:
+            method: POST
+            url: "/user/auth/sign-in"
+            body:
+              # Регистрация выполняется в test_10_user_feed.tavern.yml
+              email: algo@prog.ru
+              password: HardPASSword1!
+          request:
+            method: GET
+            url: "/user/feed"
+            status_code: 200
+          requests_number: 100
+          concurrency: 10
+          total_timeout: 10s
+          percentile: 0.8
+          percentile_timeout: 250ms
+  - name: "11/user/promo/{id}/like"
+    enabled: true
+    steps:
+      - name: Валидация лайков
+        score: 7
+        type: tavern
+        tavern:
+          filepath: test_11_user_like.tavern.yml
+  - name: "12/user/promo/{id}/comments"
+    enabled: true
+    steps:
+      - name: Создание, редактирование и получение комментариев к промокодам
+        score: 10
+        type: tavern
+        tavern:
+          filepath: test_12_user_comments.tavern.yml
+  - name: "13/user/promo/{id}/activate"
+    enabled: true
+    antifraud:
+      cache_lifetime: 3s
+      print_logs: true
+    steps:
+      - name: Активация промокодов [простые случаи]
+        score: 10
+        type: tavern
+        tavern:
+          filepath: test_13_user_promo_activate.tavern.yml
+      - name: Перезагрузка приложения
+        type: reload
+      - name: Активация промокодов [валидация кеширования]
+        score: 10
+        type: tavern
+        tavern:
+          filepath: test_13_user_promo_activate_validate_cache.tavern.yml
+  - name: "14/business/promo/{id}/stat"
+    enabled: true
+    antifraud:
+      cache_lifetime: 5s
+      print_logs: true
+    steps:
+      - name: Регистрация и активация промокодов
+        score: 0
+        type: tavern
+        tavern:
+          filepath: test_14_business_activate_promo.tavern.yml
+      - name: Перезагрузка приложения
+        type: reload
+      - name: Получение статистики
+        score: 6
+        type: tavern
+        tavern:
+          filepath: test_14_business_get_stat.tavern.yml

@@ -1,0 +1,290 @@
+test_name: Некорректный запрос на регистрацию пользователя
+
+stages:
+  - name: "Регистрация нового пользователя: некорректный e-mail"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.fan
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: простой пароль"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: whereismymoney777
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: простой пароль"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: fioejifojfieoAAAA9299
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: простой пароль"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: Aa7$b!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректная ссылка"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        avatar_url: itsnotalink
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректная ссылка"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        avatar_url: itsnotalinkjpeg
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректная ссылка"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        avatar_url: "https://"
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректная ссылка"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        avatar_url: "grpc://"
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: пустая ссылка"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        avatar_url: "" # Ссылка либо должна отсутствовать, либо быть корректной. Пустая строка - некорректно.
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: не указана страна"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректный тип для age"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: "23aaaaaa"
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: отсутствует age"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: отрицательный age"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.for.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: -20
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректный email"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: "@"
+        password: SuperStrongPassword2000!
+        other:
+          country: ru
+          age: 20
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректный email"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректный email"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: "@gmail.com"
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: некорректный email"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: "gmail.com"
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: пустое name"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: ""
+        surname: Fedotova
+        email: "gogogonow@gmail.com"
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400
+
+  - name: "Регистрация нового пользователя: пустое surname"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: ""
+        email: "gogogonow@gmail.com"
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 400

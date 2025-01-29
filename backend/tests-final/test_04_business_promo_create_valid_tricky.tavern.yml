@@ -1,0 +1,83 @@
+test_name: Корректное создание промокода [усложненная версия]
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_auth2
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - name: "Успешное создание промокода [5]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Повышенный кэшбек 10% для новых клиентов банка!"
+        image_url: "http://cdn2.thecatapi.com/"
+        target: {}
+        max_count: 10
+        active_from: "1950-01-01"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+
+  - name: "Успешное создание промокода [6]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Повышенный кэшбек 10% для новых клиентов банка!"
+        image_url: "http://cdn2.thecatapi.com/"
+        target:
+          country: Ru
+        max_count: 10
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+
+  - name: "Успешное создание промокода [6]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Повышенный кэшбек 10% для новых клиентов банка!"
+        image_url: "http://cdn2.thecatapi.com/"
+        target:
+          country: RU
+        max_count: 10
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+
+  - name: "Успешное создание промокода [7]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Повышенный кэшбек 10% для новых клиентов банка!"
+        image_url: "http://cdn2.thecatapi.com/"
+        target:
+          age_from: 100
+          age_until: 100
+        max_count: 10
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201

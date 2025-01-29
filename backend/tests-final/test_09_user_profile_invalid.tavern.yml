@@ -1,0 +1,126 @@
+test_name: Некорректные запросы на редактирование профиля
+
+stages:
+  - name: "Регистрация нового пользователя"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Jack
+        surname: TheSparrow
+        email: sparrow@movie.com
+        password: WhoLiveSInTheOcean100500!
+        other:
+          age: 48
+          country: gb
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+
+  - name: "Редактирование профиля: пустое имя и фамилия"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        name: ""
+        surname: ""
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: некорректный url"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        avatar_url: notURLcom
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: некорректный url"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        avatar_url: "https://"
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: простой пароль"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        password: pro100
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: простой пароль"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        password: "!!!!!"
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: простой пароль"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        password: "onlyYOUOOOO!"
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: простой пароль"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        password: "yOu!@1"
+    response:
+      status_code: 400
+
+  - name: "Редактирование профиля: простой пароль"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        password: "11111@@@@@aaaaa"
+    response:
+      status_code: 400
+
+  - name: "Получение профиля"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        name: Jack
+        surname: TheSparrow
+        email: sparrow@movie.com
+        other:
+          age: 48
+          country: gb

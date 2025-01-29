@@ -1,0 +1,260 @@
+test_name: Корректное получение и изменение промокода по ID
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+# Данный тест должен запускаться после test_06_business_promo_id_valid.tavern.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+
+  - type: ref
+    id: basic_auth_auth2
+
+  - name: "Успешное создание промокода [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Аааавтомобиль в подарок"
+        target: {}
+        max_count: 10
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          company1_promo1_id: id
+
+  - name: "Успешное создание промокода [компания 2]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бесплатный скин на пуджа при регистрации по промокоду!"
+        target: {}
+        max_count: 1
+        mode: UNIQUE
+        active_from: "2030-08-08"
+        promo_unique:
+        - dota2
+        - doka2
+        - warcraft3
+    response:
+      status_code: 201
+      save:
+        json:
+          company2_promo1_id: id
+
+  - name: "Аутентификация компании 1 (инвалидация старого токена)"
+    request:
+      url: "{BASE_URL}/business/auth/sign-in"
+      method: POST
+      json:
+        email: "{company1.email:s}"
+        password: "{company1.password:s}"
+    response:
+      status_code: 200
+
+  - name: "Получение промокода [1] со старым токеном"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 401
+
+  - type: ref
+    id: basic_auth_auth1
+
+  - name: "Редактируем несуществующий промокод (uuid взят из google)"
+    request:
+      url: "{BASE_URL}/business/promo/550e8400-e29b-41d4-a716-446655440000"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Кэшбек 100%"
+    response:
+      status_code: 404
+
+  - name: "Редактируем чужой промокод"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Кэшбек 100%"
+    response:
+      status_code: 403
+
+  - name: "Редактируем промокод без токена"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      json:
+        description: "Кэшбек 100%"
+    response:
+      # Если пользователь передал некорректный токен (или не передал его вовсе), необходимо возвращать ошибку аутентификации
+      status_code: 401
+
+  - name: "Редактируем промокод, некорректный запрос: короткий description"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "qqall"
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный запрос: некорректный image_url"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бонус 10000%!"
+        image_url: no
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный запрос: некорректный image_url"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бонус 10000%!"
+        image_url: "https://"
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный запрос: некорректный image_url"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бонус 10000%!"
+        image_url: notalink
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный запрос: некорректный image_url"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        image_url: jpeg
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный таргет"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бонус 10000%!"
+        target:
+          age_from: 19
+          age_until: 17
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный таргет"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бонус 10000%!"
+        target:
+          country: "USA"
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный таргет"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "Бонус 10000%!"
+        target:
+          categories:
+            - ""
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный max_count (для UNIQUE только 1)"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        max_count: 10
+    response:
+      status_code: 400
+      
+  - name: "Редактируем промокод, отрицательный max_count"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        max_count: -10
+    response:
+      status_code: 400
+
+  - name: "Редактируем промокод, некорректный active_from"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        active_from: "2024-12-28 12:00:00"
+    response:
+      status_code: 400
+
+  - name: "Получение промокода: проверяем, что поля остались неизменными"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company2_token}"
+    response:
+      status_code: 200
+      json:
+        description: "Бесплатный скин на пуджа при регистрации по промокоду!"
+        target: {}
+        max_count: 1
+        mode: UNIQUE
+        active_from: "2030-08-08"
+        promo_unique:
+        - dota2
+        - doka2
+        - warcraft3
+        # В рамках данной группы тестов значение поля active не валидируется

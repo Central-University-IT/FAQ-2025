@@ -1,0 +1,23 @@
+test_name: Базовая регистрация и аутентификация
+
+stages:
+  - name: "Регистрация нового бизнес аккаунта"
+    request:
+      url: "{BASE_URL}/business/auth/sign-up"
+      method: POST
+      json:
+        name: "Рекламное агенство Малинки-Вечеринки"
+        email: raspberryprod@mail.com
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 200
+
+  - name: "Аутентификация"
+    request:
+      url: "{BASE_URL}/business/auth/sign-in"
+      method: POST
+      json:
+        email: raspberryprod@mail.com
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 200

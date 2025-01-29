@@ -1,0 +1,12 @@
+{
+    "description": "Повышенный кэшбек 40% для новых клиентов банка!",
+    "image_url": "https://cdn2.thecatapi.com/images/3lo.jpg",
+    "target": {
+        "age_from": 15,
+        "country": "fr"
+    },
+    "max_count": 100,
+    "active_from": "2028-12-20",
+    "mode": "COMMON",
+    "promo_common": "sale-40"
+}

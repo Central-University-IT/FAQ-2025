@@ -1,0 +1,53 @@
+test_name: Получение статистики активаций
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+# Предварительно необходимо запустить тест test_14_business_activate_promo.tavern.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+
+  - type: ref
+    id: basic_auth_auth2
+
+  - name: "Получение списка промокодов для сохранения Promo ID"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        - used_count: 9
+          active: true
+      save:
+        json:
+          promo1_id: "[0].promo_id"
+
+  - name: "Получение статистики активаций по промокоду [1]: нет доступа (другая компания)"
+    request:
+      url: "{BASE_URL}/business/promo/{promo1_id}/stat"
+      method: GET
+      headers:
+        Authorization: "Bearer {company2_token}"
+    response:
+      status_code: 403
+
+  - name: "Получение статистики активаций по промокоду [1]: получение промокода"
+    request:
+      url: "{BASE_URL}/business/promo/{promo1_id}/stat"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        activations_count: 9
+        countries:
+          - activations_count: 3
+          - activations_count: 2
+          - activations_count: 4

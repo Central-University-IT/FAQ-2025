@@ -1,0 +1,93 @@
+test_name: Получение промокодов компанией
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+  - !include components/basic_promo.yml
+
+# Перед этим тестом необходимо создать промокоды с помощью test_04_business_promo_create_valid.tavern.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+
+  - type: ref
+    id: basic_auth_auth2
+  
+  - name: "Получение списка промокодов: некорректный формат sort_by"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru
+        sort_by: active_untilllll
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400
+
+  - name: "Получение списка промокодов: некорректный формат country"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: russia
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400
+
+  - name: "Получение списка промокодов: некорректный формат country"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: fr,us,russia
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400
+
+  - name: "Получение списка промокодов: некорректный формат limit"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        limit: russia
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400
+
+  - name: "Получение списка промокодов: некорректный формат offset"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        offset: russia
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400
+
+  - name: "Получение списка промокодов: отрицательный offset"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        offset: -5
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400
+
+  - name: "Получение списка промокодов: отрицательный limit"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        limit: -5
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 400

@@ -1,0 +1,481 @@
+test_name: Получение промокодов компанией
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_reg1
+
+  - type: ref
+    id: basic_auth_reg2
+
+  - name: "Регистрация нового пользователя [1]: gb, 60"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Steve
+        surname: Wozniak
+        email: creator1@apple.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 60
+          country: gb
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Регистрация нового пользователя [2]: us, 15"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Mike
+        surname: Bloomberg
+        email: mike@bloomberg.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 15
+          country: us
+    response:
+      status_code: 200
+      save:
+        json:
+          user2_token: token
+
+  - name: "Регистрация нового пользователя [3]: ru, 40"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Yefim
+        surname: Dinitz
+        email: algo@prog.ru
+        password: HardPASSword1!
+        other:
+          age: 40
+          country: ru
+    response:
+      status_code: 200
+      save:
+        json:
+          user3_token: token
+  
+  - name: "Создание промокода [1]: active, <all>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[1] Активный COMMON промокод без таргета"
+        target: {}
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo1_id: id
+
+  - name: "Создание промокода [2]: active, <fr>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[2] Активный COMMON промокод для fr"
+        target:
+          country: fr
+          categories:
+            - ios
+            - tbank
+            - КОТЫ
+        max_count: 6
+        active_from: "2023-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo2_id: id
+
+  - name: "Создание промокода [3]: inactive, <us>, 13.."
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[3] Неактивный COMMON промокод для us, 13.."
+        target:
+          country: us
+          age_from: 13
+          categories:
+            - ios
+        max_count: 100000
+        active_until: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-30"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo3_id: id
+
+  - name: "Создание промокода [4]: active, <ru>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[4] Активный UNIQUE промокод для ru, 20..60"
+        target:
+          country: ru
+          age_from: 20
+          age_until: 60
+          categories:
+            - телевизор
+        max_count: 1
+        active_until: "2055-01-10"
+        mode: "UNIQUE"
+        promo_unique:
+          - dream
+          - "of:"
+          - californication
+    response:
+      status_code: 201
+      save:
+        json:
+          promo4_id: id
+
+  - name: "Создание промокода [5]: active, <ru>, ..50"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[5] Активный COMMON промокод для ru, ..50"
+        target:
+          country: ru
+          age_until: 50
+        max_count: 1000
+        active_from: "2023-01-10"
+        active_until: "2080-05-30"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo5_id: id
+
+  - name: "Создание промокода [6]: inactive, <fr>, 5..90"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[6] Неактивный COMMON промокод для fr, 5..90"
+        target:
+          country: fr
+          age_until: 90
+          age_from: 5
+          categories:
+            - Телевизор
+        max_count: 1
+        active_from: "2040-12-08"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo6_id: id
+
+  - name: "Создание промокода [7]: active, <ru>, 16.."
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[7] Активный COMMON промокод для ru, 16.."
+        target:
+          country: ru
+          age_from: 16
+          categories:
+            - Телевизор
+        max_count: 1
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo7_id: id
+
+  - name: "Создание промокода [8]: inactive, <all>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[8] Неактивный COMMON промокод для всех"
+        target:
+          categories:
+            - ТЕЛЕВИЗОР
+        max_count: 0 # Разрешено по спецификации, ведет к active=false
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo8_id: id
+
+  - name: "Создание промокода [9]: active, <ru>, ..70"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[9] Активный COMMON промокод для ru, ..70"
+        target:
+          country: ru
+          age_until: 70
+        max_count: 1
+        active_until: "2099-08-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo9_id: id
+
+  - name: "Получение всех промокодов пользователем 1 [gb, 60]"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json: # Для компактности тестов валидируются только некоторые из полей (при этом сервер должен возвращать все обязательные поля)
+        - promo_id: "{promo8_id}"
+          company_name: "{company2.name}"
+          active: false
+        - promo_id: "{promo1_id}"
+          company_name: "{company1.name}"
+          active: true 
+      headers:
+        X-Total-Count: '2'
+
+  - name: "Получение всех промокодов пользователем 2 [us, 15]"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      headers:
+        Authorization: "Bearer {user2_token}"
+    response:
+      status_code: 200
+      json:  # Для компактности тестов валидируются только некоторые из полей (при этом сервер должен возвращать все обязательные поля)
+        - promo_id: "{promo8_id}"
+        - promo_id: "{promo3_id}"
+          company_name: "{company1.name}"
+          active: false
+        - promo_id: "{promo1_id}"
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение всех промокодов пользователем 3 [ru, 40]"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        # Для компактности тестов валидируются только некоторые из полей (при этом сервер должен возвращать все обязательные поля)
+        - promo_id: "{promo9_id}"
+          company_name: "{company2.name}"
+          active: true
+        - promo_id: "{promo8_id}"
+        - promo_id: "{promo7_id}"
+          company_name: "{company2.name}"
+          active: true
+        - promo_id: "{promo5_id}"
+          company_name: "{company1.name}"
+          active: true
+        - promo_id: "{promo4_id}"
+          company_name: "{company1.name}"
+          active: true
+        - promo_id: "{promo1_id}"
+          company_name: "{company1.name}"
+          active: true
+      headers:
+        X-Total-Count: '6'
+
+  - name: "Получение всех промокодов пользователем 3 [ru, 40], пагинация (2-3)"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        offset: 2
+        limit: 3
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo7_id}"
+        - promo_id: "{promo5_id}"
+        - promo_id: "{promo4_id}"
+      headers:
+        X-Total-Count: '6'
+
+  - name: "Получение всех промокодов пользователем 3 [ru, 40], пагинация (10-2)"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        offset: 10
+        limit: 2
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json: []
+      headers:
+        X-Total-Count: '6'
+
+  - name: "Получение всех промокодов пользователем 3 [ru, 40], пагинация (3, 1)"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        offset: 3
+        limit: 1
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo5_id}"
+      headers:
+        X-Total-Count: '6'
+
+  - name: "Получение active=true промокодов пользователем 3 [ru, 40]"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        active: "true"
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo9_id}"
+        - promo_id: "{promo7_id}"
+        - promo_id: "{promo5_id}"
+        - promo_id: "{promo4_id}"
+        - promo_id: "{promo1_id}"
+      headers:
+        X-Total-Count: '5'
+
+  - name: "Получение active=true промокодов пользователем 3 [ru, 40], пагинация (2, 2)"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        active: "true"
+        limit: 2
+        offset: 2
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo5_id}"
+        - promo_id: "{promo4_id}"
+      headers:
+        X-Total-Count: '5'
+
+  - name: "Получение active=false промокодов пользователем 3 [ru, 40]"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        active: "false"
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo8_id}"
+      headers:
+        X-Total-Count: '1'
+
+  - name: "Получение промокодов пользователем 3 [ru, 40] по категории 'телевизор' (другой регистр)"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        category: "телевиЗОР"
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo8_id}"
+        - promo_id: "{promo7_id}"
+        - promo_id: "{promo4_id}"
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение active=true промокодов пользователем 3 [ru, 40] по категории 'телевизор'"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        category: "телевизор"
+        active: "true"
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo7_id}"
+        - promo_id: "{promo4_id}"
+      headers:
+        X-Total-Count: '2'
+
+  - name: "Получение промокодов пользователем 3 [ru, 40] по несуществующей категории 'не существует'"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      params:
+        category: "не существует"
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json: []
+      headers:
+        X-Total-Count: '0'

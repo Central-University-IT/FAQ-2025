@@ -1,0 +1,149 @@
+test_name: Активация промокода
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+
+  - type: ref
+    id: basic_auth_auth2
+
+  - name: "Получение списка промокодов для сохранения Promo ID"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      save:
+        json:
+          promo1_id: "[0].promo_id"
+
+  - name: "Регистрация нового пользователя [4]: by, 23"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Igor
+        surname: Baliuk
+        email: dontstopthemusic@gmail.com
+        password: CalifornicationIsNear2024!
+        other:
+          age: 23
+          country: by
+    response:
+      status_code: 200
+      save:
+        json:
+          user4_token: token
+
+  - name: "Регистрация нового пользователя [5]: by, 23"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Aleksandr
+        surname: Shakhov
+        email: slowdown@antifraud.ru
+        password: IHaveADog!Love1t
+        other:
+          age: 28
+          country: ru
+    response:
+      status_code: 200
+      save:
+        json:
+          user5_token: token
+
+  - name: "Редактирование промокода [1], он должен стать active=true"
+    request:
+      url: "{BASE_URL}/business/promo/{promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        max_count: 100
+    response:
+      status_code: 200
+
+  - name: "Активация промокода [1] пользователем 4: корректный запрос [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 200
+
+  - name: "Внутренний запрос в Antifraud: заблокировать пользователя 4"
+    max_retries: 3
+    request:
+      url: "{ANTIFRAUD_URL}/update_user_verdict"
+      method: POST
+      json:
+        user_email: dontstopthemusic@gmail.com
+        ok: false
+    response:
+      status_code: 200
+
+  - name: "Активация промокода [1] пользователем 4: корректный запрос [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 200
+
+  - name: "Активация промокода [1] пользователем 4: отказ из-за сервиса антифрода (делаем искусственную задержку на 3 секунды)"
+    delay_before: 3
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 403
+
+  - name: "Активация промокода [1] пользователем 5: корректный запрос [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user5_token}"
+    response:
+      status_code: 200
+
+  # - name: "Внутренний запрос в Antifraud: установить искусственную задержку 2500-3000 мс, приложение должно кешировать предыдущий ответ"
+  #   request:
+  #     url: "{ANTIFRAUD_URL}/set_delay"
+  #     method: POST
+  #     json:
+  #       min: 2500
+  #       max: 3000
+  #   response:
+  #     status_code: 200
+
+  - name: "Активация промокода [1] пользователем 5: корректный запрос [1]"
+    request:
+      timeout: 1.0 # 1 секунда
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user5_token}"
+    response:
+      status_code: 200
+
+  - name: "Активация промокода [1] пользователем 5: корректный запрос [1]"
+    request:
+      timeout: 1.0 # 1 секунда
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user5_token}"
+    response:
+      status_code: 200

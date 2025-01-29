@@ -1,0 +1,118 @@
+test_name: Получение и редактирование профиля
+
+stages:
+  - name: "Регистрация нового пользователя"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Steve
+        surname: Wozniak
+        email: creator@apple.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Получение профиля"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        name: Steve
+        surname: Wozniak
+        email: creator@apple.com
+        other:
+          age: 23
+          country: ru
+
+  - name: "Изменение имени и фамилии"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        name: Valeriy
+        surname: Tsal
+    response:
+      status_code: 200
+      json:
+        name: Valeriy
+        surname: Tsal
+        # Для компактности проверяем только те поля, которые должны были измениться.
+
+  - name: "Изменение имени и фамилии"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        avatar_url: http://nodomain.com/kitten.jpeg
+    response:
+      status_code: 200
+      json:
+        avatar_url: http://nodomain.com/kitten.jpeg
+        # Для компактности проверяем только те поля, которые должны были измениться.
+
+  - name: "Изменение пароля"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        password: MegaGiant88888@dooRuveS
+    response:
+      status_code: 200
+      json:
+        name: Valeriy
+        surname: Tsal
+        email: creator@apple.com
+        other:
+          age: 23
+          country: ru
+        avatar_url: http://nodomain.com/kitten.jpeg
+
+  - name: "Получение профиля со старым токеном"
+    request:
+      url: "{BASE_URL}/user/profile"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        name: Valeriy
+        surname: Tsal
+        email: creator@apple.com
+
+  - name: "Аутентификация: старый пароль не должен подходить"
+    request:
+      url: "{BASE_URL}/user/auth/sign-in"
+      method: POST
+      json:
+        email: creator@apple.com
+        password: WhoLiveSInCalifornia2000!
+    response:
+      status_code: 401
+
+  - name: "Аутентификация: с новым паролем"
+    request:
+      url: "{BASE_URL}/user/auth/sign-in"
+      method: POST
+      json:
+        email: creator@apple.com
+        password: MegaGiant88888@dooRuveS
+    response:
+      status_code: 200

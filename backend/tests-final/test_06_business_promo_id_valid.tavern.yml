@@ -1,0 +1,265 @@
+test_name: Корректное получение и изменение промокода по ID
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_reg1
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_auth1
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_reg2
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_auth2
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - name: "Успешное создание промокода [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Повышенный кэшбек 10% для новых клиентов банка!"
+        image_url: "https://cdn2.thecatapi.com/images/3lo.jpg"
+        target: {}
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          company1_promo1_id: id
+
+  - name: "Успешное создание промокода [компания 2]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: Дарим глобус при оформлении заказа на 30000!
+        target:
+          age_from: 28
+          age_until: 50
+          country: us
+        max_count: 1
+        active_until: '2025-01-10'
+        mode: UNIQUE
+        promo_unique:
+        - only_youuuu
+        - not_only_you
+    response:
+      status_code: 201
+      save:
+        json:
+          company2_promo1_id: id
+
+  - name: "Получение промокода [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        description: "Повышенный кэшбек 10% для новых клиентов банка!"
+        image_url: "https://cdn2.thecatapi.com/images/3lo.jpg"
+        target: {}
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+        promo_id: "{company1_promo1_id:s}"
+        company_name: "{company1.name:s}"
+        like_count: 0
+        used_count: 0
+        # В рамках данной группы тестов значение поля active не валидируется
+
+  - name: "Получение промокода [компания 2]"
+    request:
+      url: "{BASE_URL}/business/promo/{company2_promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company2_token}"
+    response:
+      status_code: 200
+      json:
+        description: Дарим глобус при оформлении заказа на 30000!
+        target:
+          age_from: 28
+          age_until: 50
+          country: us
+        max_count: 1
+        active_until: '2025-01-10'
+        mode: UNIQUE
+        promo_unique:
+        - only_youuuu
+        - not_only_you
+        promo_id: "{company2_promo1_id}"
+        company_name: "{company2.name}"
+        like_count: 0
+        used_count: 0
+        # В рамках данной группы тестов значение поля active не валидируется
+
+  - name: "Редактируем описание и image [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "Кэшбек 100%"
+        image_url: "https://doesitexist.com/"
+    response:
+      status_code: 200
+      json:
+        description: "Кэшбек 100%"
+        image_url: "https://doesitexist.com/"
+        target: {}
+        # Для простоты тестов остальные поля не валидируются
+
+  - name: "Редактируем active_from [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        active_from: "2023-12-20"
+    response:
+      status_code: 200
+      json:
+        description: "Кэшбек 100%"
+        target: {}
+        active_from: "2023-12-20"
+        # Для простоты тестов остальные поля не валидируются
+
+  - name: "Редактируем target, заполненный частично [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        target:
+          country: fr
+          age_from: 28
+    response:
+      status_code: 200
+      json:
+        target:
+          country: fr
+          age_from: 28
+        # Для простоты тестов остальные поля не валидируются
+
+  - name: "Заменяем target [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        target:
+          country: Us
+          categories:
+            - ios
+            - ФУТБОЛЬЧИК
+    response:
+      status_code: 200
+      json:
+        target:
+          country: Us
+          categories:
+            - ios
+            - ФУТБОЛЬЧИК
+        # Для простоты тестов остальные поля не валидируются
+
+  - name: "Редактируем active_until [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        active_until: "2050-10-08"
+    response:
+      status_code: 200
+      json:
+        target:
+          country: Us
+          categories:
+            - ios
+            - ФУТБОЛЬЧИК
+        active_until: "2050-10-08"
+        # Для простоты тестов остальные поля не валидируются
+
+  - name: "Зануляем target [компания 1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        target: {}
+    response:
+      status_code: 200
+      json:
+        target: {}
+        # Для простоты тестов остальные поля не валидируются
+
+  - name: "Редактируем max_count вверх [common промокод]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        max_count: 20
+    response:
+      status_code: 200
+      json:
+        max_count: 20
+
+  - name: "Редактируем max_count вниз [common промокод]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        max_count: 4
+    response:
+      status_code: 200
+      json:
+        max_count: 4
+
+  - name: "Получение промокода [1]"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        description: "Кэшбек 100%"
+        image_url: "https://doesitexist.com/"
+        target: {}
+        max_count: 4
+        active_from: "2023-12-20"
+        mode: "COMMON"
+        promo_common: "sale-10"
+        promo_id: "{company1_promo1_id:s}"
+        company_name: "{company1.name:s}"

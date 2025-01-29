@@ -1,0 +1,83 @@
+test_name: Корректное создание промокода
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+  - !include components/basic_promo.yml
+
+stages:
+  - type: ref
+    id: basic_auth_reg1
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_auth1
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_reg2
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - type: ref
+    id: basic_auth_auth2
+    # Переиспользование шага из файла components/basic_auth.yml
+
+  - name: "Успешное создание промокода [1]"
+    id: 04_create1
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      # Чтобы посмотреть на структуру запроса, смотрите файлы с соответствующим названием в директории components/json
+      json: !include components/json/promo1.json
+    response:
+      status_code: 201
+      save:
+        json:
+          company1_promo1_id: id
+
+  - name: "Успешное создание промокода [2]"
+    id: 04_create2
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      # Чтобы посмотреть на структуру запроса, смотрите файлы с соответствующим названием в директории components/json
+      json: !include components/json/promo2.json
+    response:
+      status_code: 201
+      save:
+        json:
+          company1_promo2_id: id
+
+  - name: "Успешное создание промокода [3]"
+    id: 04_create3
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      # Чтобы посмотреть на структуру запроса, смотрите файлы с соответствующим названием в директории components/json
+      json: !include components/json/promo3.json
+    response:
+      status_code: 201
+      save:
+        json:
+          company1_promo3_id: id
+  
+  - name: "Успешное создание промокода [4]"
+    id: 04_create4
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      # Чтобы посмотреть на структуру запроса, смотрите файлы с соответствующим названием в директории components/json
+      json: !include components/json/promo4.json
+    response:
+      status_code: 201
+      save:
+        json:
+          company2_promo1_id: id

@@ -1,0 +1,266 @@
+test_name: Получение промокодов компанией
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+  - !include components/basic_promo.yml
+
+# Перед этим тестом необходимо создать промокоды с помощью test_04_business_promo_create_valid.tavern.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+
+  - type: ref
+    id: basic_auth_auth2
+  
+  - name: "Получение всего списка промокодов без токена"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      headers:
+        Authorization: "Bearer invalid"
+    response:
+      status_code: 401
+
+  - name: "Получение всего списка промокодов"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+      # Проверяем, что вернулись все промокоды компании, отсортированные в порядке убывания даты создания.
+        - !include components/json/promo3.json
+        - !include components/json/promo2.json
+        - !include components/json/promo1.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение списка промокодов с пагинацией [1]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        offset: 1
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        - !include components/json/promo2.json
+        - !include components/json/promo1.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение списка промокодов с пагинацией [2]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        offset: 1
+        limit: 1
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        - !include components/json/promo2.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение списка промокодов с пагинацией [3]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        offset: 100
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: []
+      headers:
+        X-Total-Count: '3'
+  
+  - name: "Получение списка промокодов с фильтрами [1]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        - !include components/json/promo3.json
+        - !include components/json/promo1.json
+      headers:
+        X-Total-Count: '2'
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией [2]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru
+        sort_by: active_until
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: 
+        - !include components/json/promo1.json
+        - !include components/json/promo3.json
+      headers:
+        X-Total-Count: '2'
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией [3]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru,FR
+        sort_by: active_from
+        limit: 10
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: 
+        - !include components/json/promo2.json
+        - !include components/json/promo1.json
+        - !include components/json/promo3.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией [4]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru,FR
+        sort_by: active_from
+        limit: 2
+        offset: 2
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        - !include components/json/promo3.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией [5]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru,FR,us
+        sort_by: active_from
+        offset: 0
+        limit: 2
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json:
+        - !include components/json/promo2.json
+        - !include components/json/promo1.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией limit=0"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        limit: 0
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: []
+
+  - name: "Успешное создание промокода [5]"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json: !include components/json/promo5.json
+    response:
+      status_code: 201
+      save:
+        json:
+          company1_promo5_id: id
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru,FR
+        sort_by: active_from
+        limit: 10
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: 
+        - !include components/json/promo2.json
+        - !include components/json/promo1.json
+        - !include components/json/promo3.json
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получение промокода по ID"
+    request:
+      url: "{BASE_URL}/business/promo/{company1_promo5_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: ru,Kz,FR
+        sort_by: active_from
+        limit: 10
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: 
+        - !include components/json/promo2.json
+        - !include components/json/promo1.json
+        - !include components/json/promo3.json
+        - !include components/json/promo5.json
+      headers:
+        X-Total-Count: '4'
+
+  - name: "Получение списка промокодов с фильтрами и пагинацией"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: GET
+      params:
+        country: Kz
+        sort_by: active_until
+        limit: 10
+      headers:
+        Authorization: "Bearer {company1_token}"
+    response:
+      status_code: 200
+      json: 
+        - !include components/json/promo1.json
+        - !include components/json/promo5.json
+      headers:
+        X-Total-Count: '2'

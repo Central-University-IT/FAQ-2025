@@ -1,0 +1,326 @@
+test_name: Активация промокода
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_reg1
+
+  - type: ref
+    id: basic_auth_reg2
+
+  - name: "Регистрация нового пользователя [1]: gb, 60"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Steve
+        surname: Wozniak
+        email: creator2@apple.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 60
+          country: gb
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Регистрация нового пользователя [2]: us, 15"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Mike
+        surname: Bloomberg
+        email: blocked@antifraud.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 15
+          country: us
+    response:
+      status_code: 200
+      save:
+        json:
+          user2_token: token
+
+  - name: "Регистрация нового пользователя [3]: kz, 40"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Yefim
+        surname: Dinitz
+        email: algo3@prog.ru
+        password: HardPASSword1!
+        other:
+          age: 40
+          country: kz
+    response:
+      status_code: 200
+      save:
+        json:
+          user3_token: token
+  
+  - name: "Создание промокода [1]: active, <all>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[1] Активный COMMON промокод для всех"
+        target: {}
+        max_count: 4
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo1_id: id
+
+  - name: "Создание промокода [2]: inactive, <kz>, 28.."
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[1] Активный COMMON промокод для kz, 28.."
+        target:
+          country: kz
+          age_from: 28
+        max_count: 10
+        active_from: "2025-02-10"
+        mode: "COMMON"
+        promo_common: "sale-20"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo2_id: id
+
+  - name: "Создание промокода [3]: active, <gb>, 45.."
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[3] Активный UNIQUE промокод для gb, 45.."
+        target:
+          country: gb
+          age_from: 45
+        active_until: "2035-02-10"
+        mode: "UNIQUE"
+        max_count: 1
+        promo_unique:
+          - uniq1
+          - uniq2
+    response:
+      status_code: 201
+      save:
+        json:
+          promo3_id: id
+
+  - name: "Активация промокода [2]: отказ, так как промокод inactive"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 403
+
+  - name: "Активация промокода [2]: отказ, так как промокод не соответствует настройкам таргетинга"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 403
+
+  - name: "Активация промокода [1] пользователем 1: успех"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo: "sale-10"
+
+  - name: "Активация промокода [1] пользователем 3: успех"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        promo: "sale-10"
+
+  - name: "Активация промокода [1] пользователем 1: успех"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo: "sale-10"
+
+  # - name: "Внутренний запрос в Antifraud: заблокировать пользователя 2 (переменная ANTIFRAUD_URL, см. config.yml)"
+  #   max_retries: 3
+  #   request:
+  #     url: "{ANTIFRAUD_URL}/update_user_verdict"
+  #     method: POST
+  #     json:
+  #       user_email: mike2@bloomberg.com
+  #       ok: false
+  #   response:
+  #     status_code: 200
+
+  - name: "Активация промокода [1] пользователем 2: пользователь заблокирован"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user2_token}"
+    response:
+      status_code: 403
+
+  - name: "Активация промокода [1] пользователем 3: успех"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        promo: "sale-10"
+
+  - name: "Активация промокода [1] пользователем 1: исчерпан лимит max_count"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 403
+
+  - name: "Попытка уменьшить max_count: сделать меньше used_count"
+    request:
+      url: "{BASE_URL}/business/promo/{promo1_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        max_count: 3
+    response:
+      status_code: 400
+
+  - name: "Активация промокода [3] пользователем 1: корректный запрос [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo3_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+
+  - name: "Активация промокода [3] пользователем 1: корректный запрос [2]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo3_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+
+  - name: "Активация промокода [3] пользователем 1: исчерпан лимит по числу активаций"
+    request:
+      url: "{BASE_URL}/user/promo/{promo3_id}/activate"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 403
+
+  - name: "Получение промокода [1] со стороны пользователя 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        active: false
+        is_activated_by_user: true
+
+  - name: "Получение истории активаций пользователем 1"
+    request:
+      url: "{BASE_URL}/user/promo/history"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo3_id}"
+          active: false
+          is_activated_by_user: true
+        - promo_id: "{promo3_id}"
+          active: false
+          is_activated_by_user: true
+        - promo_id: "{promo1_id}"
+          active: false
+          is_activated_by_user: true
+        - promo_id: "{promo1_id}"
+          active: false
+          is_activated_by_user: true
+
+  - name: "Получение истории активаций пользователем 1 (пагинация 2-3)"
+    request:
+      url: "{BASE_URL}/user/promo/history"
+      method: GET
+      params:
+        offset: 2
+        limit: 3
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo1_id}"
+          active: false
+          is_activated_by_user: true
+        - promo_id: "{promo1_id}"
+          active: false
+          is_activated_by_user: true
+      headers:
+        X-Total-Count: '4'
+
+  - name: "Получение истории активаций пользователем 1 (пагинация -0)"
+    request:
+      url: "{BASE_URL}/user/promo/history"
+      method: GET
+      params:
+        limit: 0
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json: []

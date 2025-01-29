@@ -1,0 +1,35 @@
+test_name: Корректная регистрация и проверка дублирования e-mail
+
+stages:
+  - name: "Регистрация нового пользователя"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Maria
+        surname: Fedotova
+        email: dota.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Повторная регистрация на тот же email"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Lui
+        surname: Jomalone
+        email: dota.fan@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 14
+          country: fr
+    response:
+      status_code: 409

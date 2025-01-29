@@ -1,0 +1,6 @@
+variables:
+  # BASE_URL: "http://localhost:8080/api"
+  BASE_URL: "{tavern.env_vars.BASE_URL}"
+  # ANTIFRAUD_URL: "http://localhost:9090/internal"
+  # Можете закомментировать строку ниже, если не планируете запускать тесты с антифродом
+  ANTIFRAUD_URL: "{tavern.env_vars.ANTIFRAUD_URL}"

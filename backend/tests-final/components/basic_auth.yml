@@ -1,0 +1,72 @@
+name: Базовый stage для регистрации компаний
+description:
+  Этот документ переиспользуется в других тестах для уменьшения дублирования YAML.
+
+variables:
+  company1:
+    name: "Рекламное агенство Малинки-Вечеринки"
+    email: raspberryprod@mail.com
+    password: SuperStrongPassword2000!
+  company2:
+    name: "Рекламное агенство Вишенки-Вечеринки"
+    email: cherryprod@mail.com
+    password: HARDpassword@10101010!
+
+stages:
+  - name: "Регистрация компании [1]"
+    id: basic_auth_reg1
+    request:
+      url: "{BASE_URL}/business/auth/sign-up"
+      method: POST
+      json:
+        name: "{company1.name:s}"
+        email: "{company1.email:s}"
+        password: "{company1.password:s}"
+    response:
+      status_code: 200
+      save:
+        json:
+          company1_token: token
+
+  - name: "Аутентификация [1]"
+    id: basic_auth_auth1
+    request:
+      url: "{BASE_URL}/business/auth/sign-in"
+      method: POST
+      json:
+        email: "{company1.email:s}"
+        password: "{company1.password:s}"
+    response:
+      status_code: 200
+      save:
+        json:
+          company1_token: token
+
+  - name: "Регистрация компании [2]"
+    id: basic_auth_reg2
+    request:
+      url: "{BASE_URL}/business/auth/sign-up"
+      method: POST
+      json:
+        name: "{company2.name:s}"
+        email: "{company2.email:s}"
+        password: "{company2.password:s}"
+    response:
+      status_code: 200
+      save:
+        json:
+          company2_token: token
+
+  - name: "Аутентификация [2]"
+    id: basic_auth_auth2
+    request:
+      url: "{BASE_URL}/business/auth/sign-in"
+      method: POST
+      json:
+        email: "{company2.email:s}"
+        password: "{company2.password:s}"
+    response:
+      status_code: 200
+      save:
+        json:
+          company2_token: token

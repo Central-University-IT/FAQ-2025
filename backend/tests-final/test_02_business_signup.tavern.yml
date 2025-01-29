@@ -1,0 +1,24 @@
+test_name: Регистрация на уже зарегистрированный e-mail
+
+stages:
+  - name: "Регистрация нового бизнес аккаунта"
+    request:
+      url: "{BASE_URL}/business/auth/sign-up"
+      method: POST
+      json:
+        name: "Рекламное агенство Малинки-Вечеринки"
+        email: raspberryprod@mail.com
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 200
+
+  - name: "Повторная регистрация на тот же email"
+    request:
+      url: "{BASE_URL}/business/auth/sign-up"
+      method: POST
+      json:
+        name: "Рекламное агенство Малинки-Вечеринки КОПИЯ"
+        email: raspberryprod@mail.com
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 409

@@ -1,0 +1,424 @@
+test_name: Комментарии к промокодам
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+stages:
+  - type: ref
+    id: basic_auth_reg1
+
+  - type: ref
+    id: basic_auth_reg2
+
+  - name: "Регистрация нового пользователя [1]: gb, 60"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Steve
+        surname: Wozniak
+        email: creator2@apple.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 60
+          country: gb
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Регистрация нового пользователя [2]: us, 15"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Mike
+        surname: Bloomberg
+        email: mike2@bloomberg.com
+        password: WhoLiveSInCalifornia2000!
+        other:
+          age: 15
+          country: us
+    response:
+      status_code: 200
+      save:
+        json:
+          user2_token: token
+
+  - name: "Регистрация нового пользователя [3]: kz, 40"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Yefim
+        surname: Dinitz
+        email: algo3@prog.ru
+        password: HardPASSword1!
+        other:
+          age: 40
+          country: kz
+    response:
+      status_code: 200
+      save:
+        json:
+          user3_token: token
+  
+  - name: "Создание промокода [1]: active, <all>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[1] Активный COMMON промокод для всех"
+        target: {}
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo1_id: id
+
+  - name: "Создание промокода [2]: inactive, <kz>, 28.."
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company2_token}"
+      json:
+        description: "[1] Активный COMMON промокод для kz, 28.."
+        target:
+          country: kz
+          age_from: 28
+        max_count: 10
+        active_from: "2025-02-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo2_id: id
+
+  - name: "Получение промокода [1] со стороны пользователя 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        comment_count: 0
+
+  - name: "Написать комментарий к промокоду 1 [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        text: "[1] Комментарий к промокоду 1 от пользователя 1"
+    response:
+      status_code: 201
+      json:
+        text: "[1] Комментарий к промокоду 1 от пользователя 1"
+        author:
+          name: Steve
+          surname: Wozniak
+      save:
+        json:
+          comment1_id: id
+          comment1_date: date
+
+  - name: "Написать комментарий к промокоду 1 [2]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: POST
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        text: "[2] Комментарий к промокоду 1 от пользователя 1"
+    response:
+      status_code: 201
+      save:
+        json:
+          comment2_id: id
+
+  - name: "Написать комментарий к промокоду 2 [3]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/comments"
+      method: POST
+      headers:
+        Authorization: "Bearer {user2_token}"
+      json:
+        text: "[3] Комментарий к промокоду 2 от пользователя 2"
+    response:
+      status_code: 201
+      save:
+        json:
+          comment3_id: id
+
+  - name: "Написать комментарий к промокоду 2 [4]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/comments"
+      method: POST
+      headers:
+        Authorization: "Bearer {user2_token}"
+      json:
+        text: "[4] Комментарий к промокоду 2 от пользователя 3"
+    response:
+      status_code: 201
+      save:
+        json:
+          comment4_id: id
+
+  - name: "Написать комментарий к промокоду 1 [5]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: POST
+      headers:
+        Authorization: "Bearer {user3_token}"
+      json:
+        text: "[5] Комментарий к промокоду 1 от пользователя 3"
+    response:
+      status_code: 201
+      save:
+        json:
+          comment5_id: id
+
+  - name: "Получение промокода [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        comment_count: 3
+
+  - name: "Получение промокода [2]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo2_id}"
+        comment_count: 2
+
+  - name: "Получить комментарии к промокоду 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        - id: "{comment5_id}"
+        - id: "{comment2_id}"
+        - id: "{comment1_id}"
+
+  - name: "Получить комментарии к промокоду 1 (пагинация 1-5)"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: GET
+      params:
+        limit: 5
+        offset: 1
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        - id: "{comment2_id}"
+        - id: "{comment1_id}"
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Получить комментарий по ID"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        text: "[1] Комментарий к промокоду 1 от пользователя 1"
+
+  - name: "Получить комментарий по ID: некорректная связка id промокода - id комментария [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/comments/{comment1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 404
+
+  - name: "Получить комментарий по ID: некорректная связка id промокода - id комментария [2]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment4_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 404
+
+  - name: "Редактирование комментария 1: корректно"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: PUT
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        text: "[1] Отредактированная версия комментария к промокоду 1 от пользователя 1"
+    response:
+      status_code: 200
+      json:
+        id: "{comment1_id}"
+        text: "[1] Отредактированная версия комментария к промокоду 1 от пользователя 1"
+        date: "{comment1_date}"
+
+  - name: "Редактирование комментария 1: некорректная связка с promo_id"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/comments/{comment1_id}"
+      method: PUT
+      headers:
+        Authorization: "Bearer {user1_token}"
+      json:
+        text: "Что-то не так, не тот promo_id"
+    response:
+      status_code: 404
+
+  - name: "Редактирование комментария 1: попытка не от владельца"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: PUT
+      headers:
+        Authorization: "Bearer {user3_token}"
+      json:
+        text: "Это не должно сработать! Редактировать содержимое может только владелец..."
+    response:
+      status_code: 403
+
+  - name: "Получить комментарий по ID"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+      json:
+        id: "{comment1_id}"
+        text: "[1] Отредактированная версия комментария к промокоду 1 от пользователя 1"
+        date: "{comment1_date}"
+
+  - name: "Получение промокода [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        comment_count: 3
+
+  - name: "Получить комментарии к промокоду 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        - id: "{comment5_id}"
+        - id: "{comment2_id}"
+        - id: "{comment1_id}"
+
+  - name: "Удаление комментария 1: некорректная связка с promo_id"
+    request:
+      url: "{BASE_URL}/user/promo/{promo2_id}/comments/{comment1_id}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 404
+
+  - name: "Удаление комментария 1: попытка не от владельца"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 403
+
+  - name: "Получить комментарий [1] по ID"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user3_token}"
+    response:
+      status_code: 200
+
+  - name: "Удаление комментария 1: успешное удаление"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        status: ok
+
+  - name: "Удаление комментария 1: повторное удаление, комментарий не найден"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments/{comment1_id}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 404
+
+  - name: "Получение промокода [1]"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo1_id}"
+        comment_count: 2
+
+  - name: "Получить комментарии к промокоду 1"
+    request:
+      url: "{BASE_URL}/user/promo/{promo1_id}/comments"
+      method: GET
+      headers:
+        Authorization: "Bearer {user1_token}"
+    response:
+      status_code: 200
+      json:
+        - id: "{comment5_id}"
+        - id: "{comment2_id}"
+      headers:
+        X-Total-Count: '2'

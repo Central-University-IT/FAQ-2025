@@ -1,0 +1,156 @@
+test_name: Получение промокода по ID со стороны пользователя
+
+# Подключение файлов из директории components для переиспользования в тестах
+includes:
+  - !include components/basic_auth.yml
+
+# Перед этим тестом необходимо создать промокоды с помощью test_10_user_feed.tavern.yml
+
+stages:
+  - type: ref
+    id: basic_auth_auth1
+
+  - type: ref
+    id: basic_auth_auth2
+
+  - name: "Регистрация нового пользователя [4]: sg, 83"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Leslie
+        surname: Lamport
+        email: leslie@lamport.com
+        password: Everyth1ngIsDistributed!
+        other:
+          age: 80
+          country: sg 
+    response:
+      status_code: 200
+      save:
+        json:
+          user4_token: token
+  
+  - name: "Создание промокода [10]: active, <kz>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[10] Активный COMMON промокод для kz"
+        target:
+          country: kz
+        max_count: 10
+        active_from: "2025-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo10_id: id
+
+  - name: "Создание промокода [11]: active, <sg>"
+    request:
+      url: "{BASE_URL}/business/promo"
+      method: POST
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        description: "[11] Активный COMMON промокод для sg"
+        target:
+          country: sg
+        max_count: 1000
+        active_from: "2023-01-10"
+        mode: "COMMON"
+        promo_common: "sale-10"
+    response:
+      status_code: 201
+      save:
+        json:
+          promo11_id: id
+
+  - name: "Получение промокода по ID [1]: промокод, проходящий по настройкам таргетинга"
+    request:
+      url: "{BASE_URL}/user/promo/{promo11_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo11_id}"
+
+  - name: "Получение промокода по ID [2]: промокод, не проходящий по настройкам таргетинга"
+    request:
+      url: "{BASE_URL}/user/promo/{promo10_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 200
+      json:
+        promo_id: "{promo10_id}"
+        description: "[10] Активный COMMON промокод для kz"
+
+  - name: "Получение промокода по ID: неправильный токен"
+    request:
+      url: "{BASE_URL}/user/promo/{promo10_id}"
+      method: GET
+      headers:
+        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXRhIjoi0K3RgtC-INC_0LDRgdGF0LDQu9C60LAhIn0.r-XAwfQPWGo_Z8GFbDOvixXfUl63Sf_fFirQPFcGoMg"
+    response:
+      status_code: 401
+
+  - name: "Получение промокода по ID: несуществующий промокод (uuid из google)"
+    request:
+      url: "{BASE_URL}/user/promo/550e8400-e29b-41d4-a716-446655440000"
+      method: GET
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 404
+
+  - name: "Получение всех промокодов пользователем 4"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo11_id}"
+          active: true
+        - description: "[8] Неактивный COMMON промокод для всех"
+        - description: "[1] Активный COMMON промокод без таргета"
+      headers:
+        X-Total-Count: '3'
+
+  - name: "Редактирование промокода [11], он должен стать active=false"
+    request:
+      url: "{BASE_URL}/business/promo/{promo11_id}"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {company1_token}"
+      json:
+        active_until: "2024-08-10"
+    response:
+      status_code: 200
+
+  - name: "Получение всех промокодов пользователем 4 (после редактирования)"
+    request:
+      url: "{BASE_URL}/user/feed"
+      method: GET
+      headers:
+        Authorization: "Bearer {user4_token}"
+    response:
+      status_code: 200
+      json:
+        - promo_id: "{promo11_id}"
+          active: false
+        - description: "[8] Неактивный COMMON промокод для всех"
+        - description: "[1] Активный COMMON промокод без таргета"
+      headers:
+        X-Total-Count: '3'

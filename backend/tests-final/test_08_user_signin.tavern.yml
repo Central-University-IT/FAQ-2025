@@ -1,0 +1,47 @@
+test_name: Базовая регистрация и аутентификация пользователя
+
+stages:
+  - name: "Регистрация нового пользователя"
+    request:
+      url: "{BASE_URL}/user/auth/sign-up"
+      method: POST
+      json:
+        name: Steve
+        surname: Jobs
+        email: minecraft.digger@edu.hse.ru
+        password: SuperStrongPassword2000!
+        other:
+          age: 23
+          country: ru
+    response:
+      status_code: 200
+      save:
+        json:
+          user1_token: token
+
+  - name: "Аутентификация: некорректная структура запроса (отсутствующие поля)"
+    request:
+      url: "{BASE_URL}/user/auth/sign-in"
+      method: POST
+    response:
+      status_code: 400
+
+  - name: "Аутентификация: некорректный пароль"
+    request:
+      url: "{BASE_URL}/user/auth/sign-in"
+      method: POST
+      json:
+        email: minecraft.digger@edu.hse.ru
+        password: SuperInvalidPassword2000!
+    response:
+      status_code: 401
+
+  - name: "Аутентификация: успех"
+    request:
+      url: "{BASE_URL}/user/auth/sign-in"
+      method: POST
+      json:
+        email: minecraft.digger@edu.hse.ru
+        password: SuperStrongPassword2000!
+    response:
+      status_code: 200
